@@ -1,0 +1,72 @@
+{
+  "en": {
+    "hero": {
+      "title": "Welcome to Our Company",
+      "subtitle": "Building the future together",
+      "ctaText": "Get Started",
+      "ctaLink": "/products",
+      "backgroundImage": "/images/hero-bg.jpg"
+    },
+    "features": [
+      {
+        "id": "1",
+        "icon": "🚀",
+        "title": "Fast Performance",
+        "description": "Lightning-fast load times and optimal performance"
+      },
+      {
+        "id": "2",
+        "icon": "🔒",
+        "title": "Secure & Reliable",
+        "description": "Enterprise-grade security and 99.9% uptime"
+      },
+      {
+        "id": "3",
+        "icon": "📊",
+        "title": "Data Analytics",
+        "description": "Powerful insights to drive your business forward"
+      }
+    ],
+    "stats": [
+      { "label": "Clients", "value": "500+" },
+      { "label": "Projects", "value": "1000+" },
+      { "label": "Team Members", "value": "50+" },
+      { "label": "Satisfaction", "value": "99%" }
+    ]
+  },
+  "zh": {
+    "hero": {
+      "title": "欢迎来到我们公司",
+      "subtitle": "共同构建未来",
+      "ctaText": "开始使用",
+      "ctaLink": "/products",
+      "backgroundImage": "/images/hero-bg.jpg"
+    },
+    "features": [
+      {
+        "id": "1",
+        "icon": "🚀",
+        "title": "快速性能",
+        "description": "闪电般的加载速度和最佳性能"
+      },
+      {
+        "id": "2",
+        "icon": "🔒",
+        "title": "安全可靠",
+        "description": "企业级安全保障和99.9%正常运行时间"
+      },
+      {
+        "id": "3",
+        "icon": "📊",
+        "title": "数据分析",
+        "description": "强大的洞察力推动您的业务发展"
+      }
+    ],
+    "stats": [
+      { "label": "客户", "value": "500+" },
+      { "label": "项目", "value": "1000+" },
+      { "label": "团队成员", "value": "50+" },
+      { "label": "满意度", "value": "99%" }
+    ]
+  }
+}

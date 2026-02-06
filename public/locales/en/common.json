@@ -1,0 +1,19 @@
+{
+  "nav": {
+    "home": "Home",
+    "products": "Products",
+    "about": "About Us"
+  },
+  "footer": {
+    "copyright": "© 2024 Company Name. All rights reserved.",
+    "contact": "Contact Us",
+    "email": "Email",
+    "phone": "Phone"
+  },
+  "common": {
+    "learnMore": "Learn More",
+    "getStarted": "Get Started",
+    "contactUs": "Contact Us",
+    "readMore": "Read More"
+  }
+}

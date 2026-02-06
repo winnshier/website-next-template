@@ -1,0 +1,54 @@
+{
+  "en": [
+    {
+      "id": "1",
+      "title": "Enterprise Solution",
+      "description": "Comprehensive enterprise management system",
+      "image": "/images/product-1.jpg",
+      "features": ["Cloud-based", "Scalable", "Secure"],
+      "order": 1
+    },
+    {
+      "id": "2",
+      "title": "Data Analytics Platform",
+      "description": "Real-time data analysis and visualization",
+      "image": "/images/product-2.jpg",
+      "features": ["Real-time", "AI-powered", "Customizable"],
+      "order": 2
+    },
+    {
+      "id": "3",
+      "title": "Mobile Application",
+      "description": "Cross-platform mobile solution",
+      "image": "/images/product-3.jpg",
+      "features": ["iOS & Android", "Offline support", "Push notifications"],
+      "order": 3
+    }
+  ],
+  "zh": [
+    {
+      "id": "1",
+      "title": "企业解决方案",
+      "description": "全面的企业管理系统",
+      "image": "/images/product-1.jpg",
+      "features": ["云端部署", "可扩展", "安全可靠"],
+      "order": 1
+    },
+    {
+      "id": "2",
+      "title": "数据分析平台",
+      "description": "实时数据分析和可视化",
+      "image": "/images/product-2.jpg",
+      "features": ["实时分析", "AI驱动", "可定制"],
+      "order": 2
+    },
+    {
+      "id": "3",
+      "title": "移动应用",
+      "description": "跨平台移动解决方案",
+      "image": "/images/product-3.jpg",
+      "features": ["iOS和Android", "离线支持", "推送通知"],
+      "order": 3
+    }
+  ]
+}

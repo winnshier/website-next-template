@@ -1,0 +1,19 @@
+{
+  "nav": {
+    "home": "首页",
+    "products": "产品",
+    "about": "关于我们"
+  },
+  "footer": {
+    "copyright": "© 2024 公司名称。保留所有权利。",
+    "contact": "联系我们",
+    "email": "邮箱",
+    "phone": "电话"
+  },
+  "common": {
+    "learnMore": "了解更多",
+    "getStarted": "开始使用",
+    "contactUs": "联系我们",
+    "readMore": "阅读更多"
+  }
+}
