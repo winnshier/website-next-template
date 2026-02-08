@@ -17,6 +17,11 @@
 .DS_Store
 *.pem
 
+# SSL证书（排除真实证书，保留.gitkeep）
+deploy/certs/**/*.pem
+deploy/certs/**/*.key
+deploy/certs/**/*.crt
+
 # debug
 npm-debug.log*
 yarn-debug.log*
@@ -36,3 +41,4 @@ next-env.d.ts
 
 # docker
 docker-compose.override.yml
+.last-backup-tag

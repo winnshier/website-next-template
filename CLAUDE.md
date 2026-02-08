@@ -2,146 +2,196 @@
 
 ## 项目概述
 
-这是一个基于 Next.js 14 (App Router) 的企业级官网模板项目，支持多语言、SEO优化、响应式设计、Docker部署等企业级特性。
+基于 Next.js 14 (App Router) 的企业级官网模板，支持多语言、SEO优化、响应式设计、Docker容器化部署。
 
 ## 技术栈
 
-### 核心框架
-- **Next.js 14+** (App Router) - React框架
-- **TypeScript** - 类型安全
-- **React 18+** - UI库
-
-### 样式与动画
-- **Tailwind CSS** - 原子化CSS
-- **Framer Motion** - 动画库
-- **keen-slider** - 轮播/滑块
-
-### 国际化与SEO
+- **Next.js 14+** (App Router) + **TypeScript** + **React 18+**
+- **Tailwind CSS** + **Framer Motion** - 样式与动画
 - **next-intl** - 多语言支持（英文/中文）
-- **next-sitemap** - 自动生成sitemap
-- 内置 `generateMetadata` - 动态SEO
+- **Docker** + **Nginx** - 容器化部署（本地/测试/正式环境）
 
-### 部署
-- **Docker** + **Nginx** - 容器化部署
-- 支持测试环境和正式环境
+## 快速开始
+
+```bash
+# 开发环境
+npm install
+npm run dev  # 访问 http://localhost:3000
+
+# 构建与测试
+npm run build
+npm run lint       # 代码检查
+npm run type-check # 类型检查
+npm start
+
+# Docker 部署（推荐）
+./docker-local.sh up      # 本地开发
+./docker-staging.sh up    # 测试环境
+./docker-production.sh up # 正式环境
+```
+
+## Docker 部署
+
+项目提供三个 Docker 管理脚本，分别用于本地开发、测试和正式环境。
+
+### 环境对比
+
+| 脚本 | 环境 | 端口 | 配置文件 | 特性 |
+|------|------|------|----------|------|
+| `docker-local.sh` | 本地开发 | 3000 | `.env.docker` | 快速启动，无SSL |
+| `docker-staging.sh` | 测试环境 | 8080/8443 | `.env.staging` | 支持SSL，自动备份 |
+| `docker-production.sh` | 正式环境 | 80/443 | `.env.production` | 支持SSL，自动备份，回滚 |
+
+### 快速开始
+
+**本地开发环境**：
+```bash
+# 1. 准备环境变量
+cp .env.example .env.docker
+
+# 2. 启动服务
+./docker-local.sh up
+
+# 3. 访问应用
+# 中文: http://localhost:3000/zh
+# 英文: http://localhost:3000/en
+```
+
+**测试环境**：
+```bash
+# 1. 准备环境变量和SSL证书（可选）
+cp .env.staging.example .env.staging
+# 生成自签名证书（仅测试用）
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout deploy/certs/staging/privkey.pem \
+  -out deploy/certs/staging/fullchain.pem \
+  -subj "/CN=staging.example.com"
+
+# 2. 启动服务（自动备份旧版本）
+./docker-staging.sh up
+
+# 3. 访问应用
+# HTTP: http://localhost:8080
+# HTTPS: https://localhost:8443
+```
+
+**正式环境**：
+```bash
+# 1. 准备环境变量和SSL证书
+cp .env.production.example .env.production
+vim .env.production  # 配置生产环境变量
+
+# 配置 Let's Encrypt SSL证书
+sudo certbot certonly --standalone -d yourdomain.com
+sudo cp /etc/letsencrypt/live/yourdomain.com/*.pem deploy/certs/production/
+
+# 2. 启动服务（自动备份旧版本）
+./docker-production.sh up
+
+# 3. 验证部署
+./docker-production.sh status
+curl https://yourdomain.com/api/health
+```
+
+### 脚本命令
+
+所有脚本支持以下命令：
+
+```bash
+./docker-{env}.sh up       # 构建并启动服务
+./docker-{env}.sh down     # 停止并删除容器
+./docker-{env}.sh restart  # 重启服务（不重新构建）
+./docker-{env}.sh logs     # 实时查看日志（Ctrl+C退出）
+./docker-{env}.sh status   # 查看容器状态和健康检查
+./docker-{env}.sh help     # 显示帮助信息
+```
+
+**测试/正式环境额外命令**：
+```bash
+./docker-{env}.sh backups  # 列出所有备份镜像
+./docker-{env}.sh rollback # 回滚到上一个备份版本
+```
+
+### 常见操作场景
+
+**场景1：代码更新部署**
+```bash
+git pull
+./docker-production.sh down
+./docker-production.sh up  # 自动备份当前版本
+```
+
+**场景2：部署失败快速回滚**
+```bash
+./docker-production.sh rollback  # 回滚到上一版本
+./docker-production.sh status    # 验证回滚成功
+```
+
+**场景3：查看运行日志**
+```bash
+./docker-production.sh logs      # 实时日志
+# 或查看最近100行
+docker compose -f docker-compose.production.yml logs --tail=100
+```
+
+**场景4：SSL证书更新**
+```bash
+# 更新证书文件
+sudo cp /etc/letsencrypt/live/yourdomain.com/*.pem deploy/certs/production/
+# 重启nginx
+docker compose -f docker-compose.production.yml restart nginx-production
+```
+
+### 故障排查
+
+| 问题 | 解决方案 |
+|------|----------|
+| 脚本无执行权限 | `chmod +x docker-*.sh` |
+| Docker未运行 | macOS: `open -a Docker`<br>Linux: `sudo systemctl start docker` |
+| 端口被占用 | `lsof -i :3000` 查找进程，`kill -9 <PID>` 停止 |
+| 环境变量文件不存在 | 复制对应的 `.env.*.example` 文件 |
+| 健康检查失败 | 查看日志 `./docker-{env}.sh logs` |
+| 容器启动失败 | 检查 `docker ps -a` 和 `docker logs <container_id>` |
 
 ## 项目结构
 
 ```
-web-tem/
-├── app/                          # Next.js App Router
-│   ├── [locale]/                 # 多语言路由
-│   │   ├── layout.tsx           # 根布局
-│   │   ├── page.tsx             # 首页
-│   │   ├── products/            # 产品页
-│   │   └── about/               # 关于我们
-│   ├── api/health/              # 健康检查
-│   ├── icon.tsx                 # Favicon
-│   ├── opengraph-image.tsx      # OG图片
-│   └── sitemap.ts               # Sitemap
-│
-├── components/                   # React组件
-│   ├── layout/                  # 布局组件
-│   │   ├── navigation/          # 导航栏（PC/移动端）
-│   │   ├── footer/              # 页脚（PC/移动端）
-│   │   └── ResponsiveLayout.tsx # 响应式布局容器
-│   ├── home/                    # 首页组件
-│   ├── products/                # 产品页组件
-│   ├── about/                   # 关于我们组件
-│   └── shared/                  # 共享组件
-│
-├── lib/                         # 工具库
-│   ├── api/                     # API请求模块
-│   │   ├── client.ts           # HTTP客户端
-│   │   ├── endpoints.ts        # API端点
-│   │   ├── types.ts            # 类型定义
-│   │   └── fetchers/           # 数据获取函数
-│   ├── i18n/                   # 国际化配置
-│   ├── seo/                    # SEO工具
-│   ├── hooks/                  # React Hooks
-│   └── utils/                  # 工具函数
-│
-├── public/                      # 静态资源
-│   ├── locales/                # 多语言文件
-│   ├── images/                 # 图片
-│   └── videos/                 # 视频
-│
-├── content/                     # 静态内容（JSON）
-├── middleware.ts                # 国际化中间件
-├── next.config.js              # Next.js配置
-├── tailwind.config.ts          # Tailwind配置
-├── Dockerfile                  # Docker配置
-├── docker-compose.yml          # Docker编排
-└── .env.example                # 环境变量模板
+app/[locale]/          # 多语言路由（en/zh）
+  ├── page.tsx         # 首页
+  ├── products/        # 产品页
+  └── about/           # 关于我们
+components/            # React组件
+  ├── layout/          # 导航栏、页脚
+  ├── home/            # 首页组件
+  └── shared/          # 共享组件
+lib/                   # 工具库
+  ├── api/             # API请求模块
+  ├── i18n/            # 国际化配置
+  └── hooks/           # React Hooks
+public/locales/        # 多语言文件
 ```
 
 ## 核心功能
 
-### 1. 多语言国际化
-
-- 支持英文(en)和简体中文(zh)
-- 使用 `middleware.ts` 自动检测语言
-- 语言文件位于 `public/locales/`
-- 通过 `[locale]` 动态路由实现
-
-**使用示例：**
+### 多语言国际化
+- 支持英文(en)和简体中文(zh)，通过 `[locale]` 动态路由实现
+- 使用 `next-intl`，语言文件位于 `public/locales/`
 ```typescript
 import { getTranslations } from 'next-intl/server';
-
 const t = await getTranslations({ locale, namespace: 'home' });
-const title = t('title');
 ```
 
-### 2. SEO优化
-
-- 自动生成 sitemap.xml
-- LD+JSON 结构化数据
+### SEO优化
+- 自动生成 sitemap.xml、LD+JSON 结构化数据
 - 动态 metadata（title、description、OG、Twitter Card）
-- 多语言 hreflang 标签
 - 健康检查端点：`/api/health`
 
-### 3. 响应式设计
-
-- PC端和移动端不同的导航栏/页脚
-- 使用 `useMediaQuery` hook（Client Component）
-- Tailwind 断点：sm(640px)、md(768px)、lg(1024px)、xl(1280px)
-
-### 4. API请求模块
-
-- 封装的 HTTP 客户端（`lib/api/client.ts`）
-- 支持超时、重试、缓存
+### API请求模块
+- 封装的 HTTP 客户端（`lib/api/client.ts`），支持超时、重试、缓存
 - API失败时自动降级到静态JSON
-- 构建时预生成页面（ISR支持）
-
-**使用示例：**
 ```typescript
 import { getHomeData } from '@/lib/api/fetchers/home';
-
 const homeData = await getHomeData(locale);
-```
-
-### 5. 性能优化
-
-- 图片懒加载（next/image）
-- 视频懒加载（Intersection Observer）
-- 代码分割（dynamic import）
-- 字体优化（next/font）
-- 动画降级（prefers-reduced-motion）
-
-### 6. Docker部署
-
-支持三个环境：
-- **开发环境**: 本地开发（localhost:3000）
-- **测试环境**: docker-compose.staging.yml（端口8080/8443）
-- **正式环境**: docker-compose.production.yml（端口80/443）
-
-**部署命令：**
-```bash
-# 测试环境
-docker compose -f docker-compose.staging.yml up -d --build
-
-# 正式环境
-docker compose -f docker-compose.production.yml up -d --build
 ```
 
 ## 环境变量
@@ -154,175 +204,52 @@ NEXT_PUBLIC_CDN_URL=https://cdn.example.com
 NEXT_PUBLIC_ENV=production  # development/staging/production
 ```
 
-### 可选变量
-```bash
-API_SECRET_KEY=your_secret_key
-IMAGE_CDN_TOKEN=your_cdn_token
-NEXT_PUBLIC_SHOW_DEBUG_INFO=false
-```
+**注意**：完整的环境变量配置请参考项目根目录的 `.env.example`、`.env.staging.example` 和 `.env.production.example` 文件。
 
 ## 开发规范
 
-### 1. 组件规范
-
+### 组件规范
 - Server Component 为默认，需要交互时使用 `'use client'`
 - 文件名使用 PascalCase（如 `HeroSection.tsx`）
-- 组件导出使用命名导出
 
-### 2. 样式规范
-
+### 样式规范
 - 优先使用 Tailwind CSS 类名
-- 复杂样式使用 `clsx` 或 `cva` 管理
-- 响应式使用 Tailwind 断点前缀（sm:、md:、lg:等）
+- 响应式使用断点前缀：sm(640px)、md(768px)、lg(1024px)、xl(1280px)
 
-### 3. 类型规范
-
+### 类型规范
 - 所有API响应必须有类型定义（`lib/api/types.ts`）
-- Props 使用 TypeScript interface
 - 避免使用 `any`，使用 `unknown` 代替
 
-### 4. 国际化规范
-
+### 国际化规范
 - 所有文案必须通过 `t()` 函数获取
 - 翻译文件按命名空间组织（common、home、products等）
-- 新增语言需要更新 `middleware.ts` 和 `lib/i18n/config.ts`
 
-### 5. API请求规范
-
+### API请求规范
 - 所有API请求通过 `lib/api/client.ts` 发起
 - 新增端点在 `lib/api/endpoints.ts` 定义
-- 数据获取函数放在 `lib/api/fetchers/` 目录
 - 必须实现降级到静态JSON的逻辑
 
-## 常用命令
+## 常见问题
 
-```bash
-# 开发
-npm run dev
-
-# 构建
-npm run build
-
-# 启动生产服务器
-npm start
-
-# 类型检查
-npm run type-check
-
-# Lint检查
-npm run lint
-
-# Docker构建
-docker compose build
-
-# Docker启动
-docker compose up -d
-
-# 查看日志
-docker compose logs -f web
-```
-
-## 页面说明
-
-### 首页 (`app/[locale]/page.tsx`)
-- Hero区域：全屏背景 + 标题 + CTA
-- 特色介绍：3-4个特性卡片
-- 产品预览：产品展示
-- 统计数据：动画数字展示
-
-### 产品页 (`app/[locale]/products/page.tsx`)
-- PPT式全屏滑块展示
-- 支持键盘、鼠标、触摸操作
-- 页面指示器
-
-### 关于我们 (`app/[locale]/about/page.tsx`)
-- 公司介绍
-- 团队展示
-- 发展历程（时间轴）
-- 联系方式
-
-## 故障排查
-
-### 1. 构建失败
+### 构建失败
 - 检查 TypeScript 类型错误
 - 检查环境变量是否配置
 - 检查依赖是否完整安装
 
-### 2. 多语言不生效
+### 多语言不生效
 - 检查 `middleware.ts` 配置
 - 检查 `public/locales/` 文件是否存在
-- 检查浏览器 Accept-Language 头
 
-### 3. Docker启动失败
-- 检查端口是否被占用
-- 检查 `.env.production` 文件是否存在
-- 检查 Docker 日志：`docker compose logs`
-
-### 4. API请求失败
+### API请求失败
 - 检查 `NEXT_PUBLIC_API_URL` 配置
-- 检查网络连接
-- 查看浏览器控制台错误
 - 会自动降级到静态JSON
 
-## 扩展指南
-
-### 添加新页面
-1. 在 `app/[locale]/` 下创建新目录
-2. 创建 `page.tsx` 和 `loading.tsx`
-3. 实现 `generateMetadata` 函数
-4. 更新导航栏链接
-
-### 添加新语言
-1. 在 `public/locales/` 创建新语言目录
-2. 复制翻译文件并翻译
-3. 更新 `middleware.ts` 的 `locales` 数组
-4. 更新 `lib/i18n/config.ts`
-5. 添加对应字体（如需要）
-
-### 添加新API端点
-1. 在 `lib/api/endpoints.ts` 定义端点
-2. 在 `lib/api/types.ts` 定义类型
-3. 在 `lib/api/fetchers/` 创建获取函数
-4. 实现降级逻辑
-
-## 性能指标
-
-### Core Web Vitals 目标
-- **LCP**: < 2.5s
-- **FID**: < 100ms
-- **CLS**: < 0.1
-- **FCP**: < 1.8s
-
-### 浏览器支持
-- Chrome 100+
-- Safari 15+
-- Firefox 100+
-- Edge 100+
-
-## 安全注意事项
-
-1. **环境变量**: 敏感信息不要提交到Git
-2. **API密钥**: 使用环境变量管理
-3. **HTTPS**: 正式环境必须使用HTTPS
-4. **CSP**: 配置内容安全策略
-5. **依赖更新**: 定期更新依赖包
-
-## 参考文档
-
-- [完整规划文档](./PROJECT_PLAN.md)
-- [Next.js 官方文档](https://nextjs.org/docs)
-- [Tailwind CSS 文档](https://tailwindcss.com/docs)
-- [Framer Motion 文档](https://www.framer.com/motion/)
-- [next-intl 文档](https://next-intl-docs.vercel.app/)
-
-## 联系方式
-
-如有问题，请查看：
-1. `PROJECT_PLAN.md` - 完整技术方案
-2. `DEVELOPMENT.md` - 开发进度记录
-3. GitHub Issues - 问题追踪
+### 性能与安全
+- **性能目标**：LCP < 2.5s, FID < 100ms, CLS < 0.1
+- **浏览器支持**：Chrome/Safari/Firefox/Edge 100+
+- **安全要点**：敏感信息使用环境变量，正式环境必须启用HTTPS
 
 ---
 
-**最后更新**: 2026-02-06
-**版本**: 1.0.0
+**最后更新**: 2026-02-08
+**版本**: 2.0.0

@@ -5,6 +5,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+        NEXT_PUBLIC_CDN_URL: ${NEXT_PUBLIC_CDN_URL}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_ENV: ${NEXT_PUBLIC_ENV:-development}
     image: web-tem:local
     container_name: web-tem-local
     env_file: .env.docker

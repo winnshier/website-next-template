@@ -149,30 +149,60 @@ API请求失败时会自动降级到静态JSON。
 
 ## 🐳 Docker部署
 
-### 构建镜像
+项目提供三个 Docker 管理脚本，简化部署流程。
+
+### 快速部署
 
 ```bash
-docker compose build
+# 本地开发环境（端口3000）
+./docker-local.sh up
+
+# 测试环境（端口8080/8443）
+./docker-staging.sh up
+
+# 正式环境（端口80/443）
+./docker-production.sh up
 ```
 
-### 启动服务
+### 常用命令
 
 ```bash
-# 开发环境
-docker compose up -d
+./docker-{env}.sh up       # 启动服务
+./docker-{env}.sh down     # 停止服务
+./docker-{env}.sh restart  # 重启服务
+./docker-{env}.sh logs     # 查看日志
+./docker-{env}.sh status   # 查看状态
+./docker-{env}.sh help     # 帮助信息
+```
+
+### 环境准备
+
+```bash
+# 本地环境
+cp .env.example .env.docker
 
 # 测试环境
-docker compose -f docker-compose.staging.yml up -d
+cp .env.staging.example .env.staging
 
 # 正式环境
-docker compose -f docker-compose.production.yml up -d
+cp .env.production.example .env.production
+vim .env.production  # 配置环境变量
 ```
 
 ### 健康检查
 
 ```bash
-curl http://localhost/api/health
+# 本地环境
+curl http://localhost:3000/api/health
+
+# 测试环境
+curl http://localhost:8080/api/health
+
+# 正式环境
+curl https://yourdomain.com/api/health
 ```
+
+详细部署文档请查看 [CLAUDE.md](./CLAUDE.md#docker-部署)
 
 ## 📝 环境变量
 
@@ -212,8 +242,9 @@ npm run type-check   # 类型检查
 
 ## 📚 文档
 
+- [部署指南](./DOCKER.md) - Docker 部署完整文档
+- [开发指南](./CLAUDE.md) - 开发规范和快速参考
 - [完整规划文档](./PROJECT_PLAN.md) - 详细技术方案
-- [开发指南](./CLAUDE.md) - Claude开发指南
 - [开发进度](./DEVELOPMENT.md) - 实时进度记录
 
 ## 🔧 技术栈
@@ -270,4 +301,4 @@ MIT License
 
 ---
 
-**最后更新**: 2026-02-06
+**最后更新**: 2026-02-08

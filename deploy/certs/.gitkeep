@@ -1,0 +1,8 @@
+# SSL证书目录
+#
+# 此目录用于存放SSL证书文件
+# 请将真实的证书文件放在对应的子目录中：
+# - staging/fullchain.pem 和 staging/privkey.pem
+# - production/fullchain.pem 和 production/privkey.pem
+#
+# 注意：真实的证书文件已被.gitignore排除，不会提交到版本控制

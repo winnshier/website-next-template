@@ -1,0 +1,7 @@
+# Staging环境SSL证书
+#
+# 请将测试环境的SSL证书文件放在此目录：
+# - fullchain.pem: 完整证书链
+# - privkey.pem: 私钥文件
+#
+# 这些文件不会被提交到Git仓库
