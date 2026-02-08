@@ -29,7 +29,7 @@
 
 ```bash
 # 1. 准备环境变量
-cp .env.example .env.docker
+cp config/.env.example .env.docker
 
 # 2. 启动服务
 ./docker-local.sh up
@@ -43,7 +43,7 @@ cp .env.example .env.docker
 
 ```bash
 # 1. 准备环境变量
-cp .env.staging.example .env.staging
+cp config/.env.staging.example .env.staging
 vim .env.staging
 
 # 2. 准备SSL证书（可选）
@@ -65,7 +65,7 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 
 ```bash
 # 1. 准备环境变量
-cp .env.production.example .env.production
+cp config/.env.production.example .env.production
 vim .env.production
 
 # 2. 准备SSL证书（推荐）

@@ -199,13 +199,13 @@ CDN_PROVIDER=aliyun  # 或 tencent
 
 ```bash
 # 本地环境
-cp .env.example .env.docker
+cp config/.env.example .env.docker
 
 # 测试环境
-cp .env.staging.example .env.staging
+cp config/.env.staging.example .env.staging
 
 # 正式环境
-cp .env.production.example .env.production
+cp config/.env.production.example .env.production
 vim .env.production  # 配置环境变量
 ```
 

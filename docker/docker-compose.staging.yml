@@ -3,8 +3,8 @@ version: "3.9"
 services:
   web-staging:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
       args:
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
         NEXT_PUBLIC_CDN_URL: ${NEXT_PUBLIC_CDN_URL}
@@ -13,7 +13,7 @@ services:
     image: web-tem:staging
     container_name: web-tem-staging
     env_file:
-      - .env.staging
+      - ../.env.staging
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_ENV: staging
@@ -37,8 +37,8 @@ services:
       - "${NGINX_HTTP_PORT:-8080}:80"
       - "${NGINX_HTTPS_PORT:-8443}:443"
     volumes:
-      - ./deploy/nginx.staging.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./deploy/certs/staging:/etc/nginx/certs:ro
+      - ../deploy/nginx.staging.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../deploy/certs/staging:/etc/nginx/certs:ro
     restart: unless-stopped
     networks:
       - staging-network
