@@ -263,6 +263,7 @@ npm run type-check   # 类型检查
 ## 📚 文档
 
 - [部署指南](./DOCKER.md) - Docker 部署完整文档（含 CDN 配置）
+- [CDN 使用指南](./docs/CDN_USAGE.md) - 静态资源 CDN 配置和使用方法
 - [开发指南](./CLAUDE.md) - 开发规范和快速参考
 - [完整规划文档](./PROJECT_PLAN.md) - 详细技术方案
 - [开发进度](./DEVELOPMENT.md) - 实时进度记录

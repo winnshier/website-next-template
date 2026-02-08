@@ -2,6 +2,89 @@
 
 项目提供三个 Docker 管理脚本，简化部署流程。支持自动上传静态文件到 CDN。
 
+## 环境变量配置
+
+### 基础配置
+
+| 变量名 | 说明 | 必需 | 默认值 | 示例 |
+|--------|------|------|--------|------|
+| `NODE_ENV` | Node.js 环境 | 是 | - | `production` |
+| `NEXT_PUBLIC_ENV` | 应用环境标识 | 是 | - | `development/staging/production` |
+| `NEXT_PUBLIC_SITE_URL` | 站点完整 URL | 是 | - | `https://example.com` |
+| `NEXT_PUBLIC_API_URL` | API 服务地址 | 是 | - | `https://api.example.com` |
+| `API_SECRET_KEY` | API 密钥（服务端） | 否 | - | `your_secret_key` |
+
+### CDN 配置（可选）
+
+| 变量名 | 说明 | 必需 | 默认值 | 示例 |
+|--------|------|------|--------|------|
+| `NEXT_PUBLIC_CDN_URL` | CDN 域名 | 否 | - | `https://cdn.example.com` |
+| `CDN_PROVIDER` | CDN 提供商 | 否 | `aliyun` | `aliyun` 或 `tencent` |
+| `CDN_UPLOAD_ENABLED` | 是否启用自动上传 | 否 | `false` | `true/false` |
+| `CDN_SOURCE_DIR` | Next.js 构建产物目录 | 否 | `.next/static` | `.next/static` |
+| `CDN_TARGET_PREFIX` | CDN 目标路径前缀 | 否 | `_next/static` | `_next/static` |
+| `CDN_UPLOAD_JOBS` | 并发上传任务数 | 否 | `8` | `8` |
+| `CDN_SKIP_ON_ERROR` | 上传失败是否跳过 | 否 | `false` | `true/false` |
+| `CDN_DRY_RUN` | 仅模拟不实际上传 | 否 | `false` | `true/false` |
+
+### Public 目录上传（可选）
+
+| 变量名 | 说明 | 必需 | 默认值 | 示例 |
+|--------|------|------|--------|------|
+| `CDN_UPLOAD_PUBLIC` | 是否上传 public 目录 | 否 | `false` | `true/false` |
+| `CDN_PUBLIC_SOURCE_DIR` | public 源目录 | 否 | `public` | `public` |
+| `CDN_PUBLIC_TARGET_PREFIX` | CDN 目标前缀 | 否 | `public` | `public` |
+
+### 阿里云 OSS 配置（使用阿里云时必需）
+
+| 变量名 | 说明 | 必需 | 默认值 | 示例 |
+|--------|------|------|--------|------|
+| `OSS_BUCKET` | OSS Bucket 名称 | 是 | - | `oss://your-bucket` |
+| `OSS_ACCESS_KEY_ID` | 阿里云 AccessKey ID | 是 | - | `LTAI5t...` |
+| `OSS_ACCESS_KEY_SECRET` | 阿里云 AccessKey Secret | 是 | - | `xxx` |
+| `OSS_ENDPOINT` | OSS 访问域名 | 否 | - | `oss-cn-hangzhou.aliyuncs.com` |
+| `OSS_STS_TOKEN` | STS 临时凭证 | 否 | - | - |
+
+### 腾讯云 COS 配置（使用腾讯云时必需）
+
+| 变量名 | 说明 | 必需 | 默认值 | 示例 |
+|--------|------|------|--------|------|
+| `COS_BUCKET` | COS Bucket 名称 | 是 | - | `your-bucket-1250000000` |
+| `COS_REGION` | COS 地域 | 是 | - | `ap-guangzhou` |
+| `COS_SECRET_ID` | 腾讯云 SecretId | 是 | - | `AKIDxxx` |
+| `COS_SECRET_KEY` | 腾讯云 SecretKey | 是 | - | `xxx` |
+| `COS_SESSION_TOKEN` | 临时密钥 Token | 否 | - | - |
+| `COS_SCHEME` | 传输协议 | 否 | `https` | `https/http` |
+
+### 调试与可选配置
+
+| 变量名 | 说明 | 必需 | 默认值 | 示例 |
+|--------|------|------|--------|------|
+| `NEXT_PUBLIC_SHOW_DEBUG_INFO` | 显示调试信息 | 否 | `false` | `true/false` |
+| `NEXT_PUBLIC_DEBUG` | 开启调试模式 | 否 | `false` | `true/false` |
+| `DATABASE_URL` | 数据库连接 | 否 | - | `postgresql://user:pass@host:5432/db` |
+| `GOOGLE_ANALYTICS_ID` | Google Analytics ID | 否 | - | `G-XXXXXXXXXX` |
+| `SENTRY_DSN` | Sentry 错误追踪 | 否 | - | `https://xxx@sentry.io/xxx` |
+
+### 配置说明
+
+**CDN 上传工作流程**：
+1. 配置 `NEXT_PUBLIC_CDN_URL` - CDN 域名
+2. 配置 `CDN_UPLOAD_ENABLED=true` - 启用自动上传
+3. 配置 `CDN_PROVIDER` - 选择提供商（aliyun/tencent）
+4. 配置对应提供商的认证信息（OSS 或 COS）
+5. 部署时自动通过 Docker 容器上传静态文件
+
+**Public 目录上传**：
+- 默认只上传 Next.js 构建产物（`.next/static/`）
+- 设置 `CDN_UPLOAD_PUBLIC=true` 可上传 public 目录
+- 需要在代码中使用 `getAssetUrl()` 函数引用资源
+
+**环境文件位置**：
+- 本地开发：`.env.docker`
+- 测试环境：`.env.staging`
+- 正式环境：`.env.production`
+
 ## 环境对比
 
 | 脚本 | 环境 | 端口 | 配置文件 | 特性 |
@@ -271,8 +354,9 @@ OSS_ENDPOINT=oss-cn-hangzhou.aliyuncs.com
 **部署流程**：
 1. 构建 Next.js 项目
 2. 自动检测 CDN 配置
-3. 通过 Docker 容器上传静态文件（无需本地安装 ossutil/coscmd）
-4. 构建并启动 Docker 容器
+3. 步骤 1/2: 上传 `.next/static/` 到 CDN（Next.js 构建产物）
+4. 步骤 2/2: 上传 `public/` 到 CDN（如果启用 `CDN_UPLOAD_PUBLIC=true`）
+5. 构建并启动 Docker 容器
 
 **注意**：
 - 未配置 CDN 时会自动跳过上传
@@ -281,6 +365,35 @@ OSS_ENDPOINT=oss-cn-hangzhou.aliyuncs.com
   ```bash
   docker build -f docker/cos-upload.Dockerfile -t web-tem/coscmd:latest .
   ```
+
+### Public 目录上传（可选）
+
+默认情况下，只上传 Next.js 构建产物（`.next/static/`）。如需上传 `public/` 目录的静态资源（图片、视频等）到 CDN：
+
+**1. 启用上传**：
+```bash
+# .env.production 或 .env.staging
+CDN_UPLOAD_PUBLIC=true
+```
+
+**2. 代码中使用**：
+```tsx
+import { getAssetUrl } from '@/lib/utils/cdn';
+
+// 图片、视频等所有静态资源统一使用
+<img src={getAssetUrl('/images/logo.png')} alt="Logo" />
+<video src={getAssetUrl('/videos/intro.mp4')} controls />
+```
+
+**路径转换**：
+- 未配置 CDN：`/images/logo.png`（走服务器）
+- 配置 CDN：`https://cdn.example.com/public/images/logo.png`（走 CDN）
+
+**使用建议**：
+- 资源少（< 10MB）：保持关闭，走服务器
+- 资源多（> 10MB）：启用上传，走 CDN
+
+详细使用方法请查看 [CLAUDE.md - CDN 静态资源使用](./CLAUDE.md#cdn-静态资源使用)
 
 ### 独立上传脚本
 
@@ -309,6 +422,8 @@ Next.js 静态文件名包含哈希值（如 `webpack-b09e44ad183df33b.js`），
 | 上传失败 | 查看日志，检查 AccessKey 权限 |
 | 跳过 CDN 上传 | 检查环境变量配置是否正确 |
 | Docker 镜像构建失败 | 确保网络可访问 Docker Hub 和 PyPI |
+| public 资源未走 CDN | 1. 检查是否启用 `CDN_UPLOAD_PUBLIC=true`<br>2. 检查是否使用了工具函数<br>3. 检查是否重新部署 |
+| 图片路径错误 | 确保路径以 `/` 开头，使用 `getImageUrl('/images/logo.png')` 而非 `getImageUrl('images/logo.png')` |
 
 ---
 

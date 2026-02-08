@@ -249,7 +249,106 @@ NEXT_PUBLIC_ENV=production  # development/staging/production
 - **浏览器支持**：Chrome/Safari/Firefox/Edge 100+
 - **安全要点**：敏感信息使用环境变量，正式环境必须启用HTTPS
 
+## CDN 静态资源使用
+
+### 基本用法
+
+所有 `public/` 目录下的静态资源（图片、视频、字体等）统一使用 `getAssetUrl` 函数：
+
+```tsx
+import { getAssetUrl } from '@/lib/utils/cdn';
+```
+
+### 使用示例
+
+**图片资源**：
+```tsx
+// ❌ 错误：直接使用路径
+<img src="/images/logo.png" alt="Logo" />
+
+// ✅ 正确：使用 getAssetUrl
+<img src={getAssetUrl('/images/logo.png')} alt="Logo" />
+```
+
+**视频资源**：
+```tsx
+<video src={getAssetUrl('/videos/intro.mp4')} controls />
+```
+
+**背景图片**：
+```tsx
+<div style={{ backgroundImage: `url(${getAssetUrl('/images/hero-bg.jpg')})` }}>
+  内容
+</div>
+```
+
+**Next.js Image 组件**：
+```tsx
+import Image from 'next/image';
+import { getAssetUrl } from '@/lib/utils/cdn';
+
+<Image
+  src={getAssetUrl('/images/product.jpg')}
+  alt="Product"
+  width={800}
+  height={600}
+/>
+```
+
+**动态路径**：
+```tsx
+const products = [
+  { id: 1, image: '/images/product-1.jpg' },
+  { id: 2, image: '/images/product-2.jpg' },
+];
+
+{products.map(product => (
+  <img
+    key={product.id}
+    src={getAssetUrl(product.image)}
+    alt={`Product ${product.id}`}
+  />
+))}
+```
+
+**条件判断**：
+```tsx
+import { isCdnEnabled } from '@/lib/utils/cdn';
+
+if (isCdnEnabled()) {
+  console.log('CDN 已启用，静态资源将从 CDN 加载');
+}
+```
+
+### 注意事项
+
+1. **路径格式**：必须以 `/` 开头
+   ```tsx
+   ✅ getAssetUrl('/images/logo.png')
+   ❌ getAssetUrl('images/logo.png')
+   ❌ getAssetUrl('../images/logo.png')
+   ```
+
+2. **环境自动适配**：
+   - 开发环境：自动使用本地路径
+   - 生产环境（未配置 CDN）：使用本地路径
+   - 生产环境（已配置 CDN）：使用 CDN 路径
+
+3. **文件组织**：
+   ```
+   public/
+   ├── images/          # 图片资源
+   ├── videos/          # 视频资源
+   ├── fonts/           # 字体文件
+   └── locales/         # 语言文件（建议走服务器）
+   ```
+
+4. **性能建议**：
+   - 小文件（< 100KB）：可以走服务器
+   - 大文件（> 100KB）：建议走 CDN
+
 ---
 
 **最后更新**: 2026-02-08
 **版本**: 2.0.0
+

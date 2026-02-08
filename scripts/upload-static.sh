@@ -506,6 +506,11 @@ EOF
 provider_status=0
 provider_lower="$(echo "$PROVIDER" | tr '[:upper:]' '[:lower:]')"
 
+# 上传 .next/static 目录
+log_info "========================================="
+log_info "步骤 1/2: 上传 Next.js 构建产物"
+log_info "========================================="
+
 case "$provider_lower" in
     aliyun|"")
         log_info "使用阿里云 OSS 上传"
@@ -524,6 +529,84 @@ case "$provider_lower" in
         exit 1
         ;;
 esac
+
+# 检查第一步是否成功
+if [ "$provider_status" -ne 0 ]; then
+    if [ "$SKIP_ON_ERROR" -eq 1 ]; then
+        log_warn "Next.js 构建产物上传失败但已根据 CDN_SKIP_ON_ERROR 忽略错误"
+    else
+        log_error "Next.js 构建产物上传失败"
+        exit "$provider_status"
+    fi
+fi
+
+# 上传 public 目录（如果启用）
+if is_truthy "${CDN_UPLOAD_PUBLIC:-false}"; then
+    log_info ""
+    log_info "========================================="
+    log_info "步骤 2/2: 上传 public 目录静态资源"
+    log_info "========================================="
+
+    PUBLIC_SOURCE_DIR="${CDN_PUBLIC_SOURCE_DIR:-public}"
+    PUBLIC_TARGET_PREFIX="${CDN_PUBLIC_TARGET_PREFIX:-public}"
+
+    # 检查 public 目录是否存在
+    if [ ! -d "$PUBLIC_SOURCE_DIR" ]; then
+        log_warn "未找到 public 目录：$PUBLIC_SOURCE_DIR，跳过上传"
+    else
+        # 获取 public 目录的绝对路径
+        if ! PUBLIC_SOURCE_ABS="$(cd "$PROJECT_ROOT" && cd "$PUBLIC_SOURCE_DIR" && pwd 2>/dev/null)"; then
+            log_error "无法访问 public 目录：$PUBLIC_SOURCE_DIR"
+        else
+            log_info "源目录: $PUBLIC_SOURCE_ABS"
+            log_info "目标前缀: $PUBLIC_TARGET_PREFIX"
+
+            # 临时保存原始值
+            ORIGINAL_SOURCE_ABS="$SOURCE_ABS"
+            ORIGINAL_TARGET_PREFIX="$TARGET_PREFIX"
+
+            # 设置为 public 目录
+            SOURCE_ABS="$PUBLIC_SOURCE_ABS"
+            TARGET_PREFIX="$PUBLIC_TARGET_PREFIX"
+
+            # 执行上传
+            public_status=0
+            case "$provider_lower" in
+                aliyun|"")
+                    if ! run_aliyun_upload; then
+                        public_status=$?
+                    fi
+                    ;;
+                tencent)
+                    if ! run_tencent_upload; then
+                        public_status=$?
+                    fi
+                    ;;
+            esac
+
+            # 恢复原始值
+            SOURCE_ABS="$ORIGINAL_SOURCE_ABS"
+            TARGET_PREFIX="$ORIGINAL_TARGET_PREFIX"
+
+            # 检查上传结果
+            if [ "$public_status" -ne 0 ]; then
+                if [ "$SKIP_ON_ERROR" -eq 1 ]; then
+                    log_warn "public 目录上传失败但已根据 CDN_SKIP_ON_ERROR 忽略错误"
+                else
+                    log_error "public 目录上传失败"
+                    exit "$public_status"
+                fi
+            fi
+        fi
+    fi
+else
+    log_info ""
+    log_info "========================================="
+    log_info "步骤 2/2: 跳过 public 目录上传"
+    log_info "========================================="
+    log_info "CDN_UPLOAD_PUBLIC 未启用，跳过 public 目录上传"
+    log_info "如需上传 public 目录，请设置 CDN_UPLOAD_PUBLIC=true"
+fi
 
 # ============================================================================
 # 结果处理
