@@ -326,7 +326,7 @@ log_info "  失败时跳过: $SKIP_ON_ERROR"
 # ============================================================================
 
 run_aliyun_upload() {
-    local bucket access secret endpoint remote cfg
+    local bucket access secret endpoint remote cfg image
 
     bucket="$(normalize_bucket "${OSS_BUCKET:-}")"
     access="${OSS_ACCESS_KEY_ID:-}"
@@ -345,11 +345,25 @@ run_aliyun_upload() {
 
     endpoint="${OSS_ENDPOINT:-oss-cn-hangzhou.aliyuncs.com}"
     remote="oss://${bucket}/${TARGET_PREFIX}"
+    image="${OSS_IMAGE:-web-tem/ossutil:latest}"
 
     log_info "准备上传到阿里云 OSS："
     log_info "  Bucket: $bucket"
     log_info "  Endpoint: $endpoint"
     log_info "  远程路径: $remote"
+
+    # 确保镜像存在
+    if ! docker image inspect "$image" >/dev/null 2>&1; then
+        log_warn "未找到镜像 $image，尝试构建..."
+        local dockerfile="$PROJECT_ROOT/docker/oss-upload.Dockerfile"
+        if [ ! -f "$dockerfile" ]; then
+            log_error "缺少 Dockerfile：$dockerfile"
+            return 1
+        fi
+        if [ "$DRY_RUN" -eq 0 ]; then
+            docker build -f "$dockerfile" -t "$image" "$PROJECT_ROOT"
+        fi
+    fi
 
     # 创建临时配置文件
     cfg="$(mktemp)"
@@ -375,7 +389,7 @@ EOF
     run_docker_command docker run --rm \
         -v "${SOURCE_ABS}:/upload:ro" \
         -v "${cfg}:/root/.ossutilconfig:ro" \
-        registry.cn-hangzhou.aliyuncs.com/acs/ossutil:latest \
+        "$image" \
         ossutil64 cp -r -f /upload "${remote%/}/" --jobs "${CDN_UPLOAD_JOBS:-8}"
 }
 
