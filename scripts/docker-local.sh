@@ -65,6 +65,29 @@ check_env_file() {
     fi
 }
 
+# 清理旧容器（如果存在）
+cleanup_old_containers() {
+    print_info "检查并清理旧容器..."
+
+    # 获取所有相关容器
+    local containers=$(docker ps -a --filter "name=${CONTAINER_NAME}" --format "{{.Names}}" 2>/dev/null)
+
+    if [ -n "$containers" ]; then
+        print_warning "发现旧容器，正在清理..."
+        echo "$containers" | while read container; do
+            if [ -n "$container" ]; then
+                print_info "停止并删除容器: $container"
+                docker stop "$container" >/dev/null 2>&1 || true
+                docker rm "$container" >/dev/null 2>&1 || true
+            fi
+        done
+        print_success "旧容器清理完成"
+    else
+        print_info "未发现旧容器"
+    fi
+    echo ""
+}
+
 # 启动服务
 docker_up() {
     print_header
@@ -73,6 +96,9 @@ docker_up() {
 
     check_docker
     check_env_file
+
+    # 清理旧容器
+    cleanup_old_containers
 
     print_info "构建Docker镜像..."
     docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build
