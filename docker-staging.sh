@@ -133,8 +133,8 @@ docker_up() {
     check_env_file
     check_ssl_certs
 
-    # 备份当前镜像
-    backup_image
+    # 备份当前镜像（忽略返回值）
+    backup_image || true
     echo ""
 
     print_info "构建Docker镜像..."

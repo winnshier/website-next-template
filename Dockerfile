@@ -31,6 +31,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# 安装 wget 用于健康检查
+RUN apk add --no-cache wget
+
 # 创建非特权用户
 RUN addgroup -g 1001 nodejs && adduser -S -u 1001 nextjs
 
