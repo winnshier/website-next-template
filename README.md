@@ -149,7 +149,7 @@ API请求失败时会自动降级到静态JSON。
 
 ## 🐳 Docker部署
 
-项目提供三个 Docker 管理脚本，简化部署流程。
+项目提供三个 Docker 管理脚本，简化部署流程。**支持自动上传静态文件到 CDN**。
 
 ### 快速部署
 
@@ -163,6 +163,26 @@ API请求失败时会自动降级到静态JSON。
 # 正式环境（端口80/443）
 ./docker-production.sh up
 ```
+
+### CDN 加速（可选）
+
+如果配置了 CDN，部署时会自动上传静态文件到对象存储：
+
+**配置方法**：
+```bash
+# 在 .env.production 中添加
+NEXT_PUBLIC_CDN_URL=https://cdn.example.com
+OSS_BUCKET=oss://your-bucket-name
+CDN_PROVIDER=aliyun  # 或 tencent
+```
+
+**优势**：
+- ✅ 全球 CDN 加速，访问更快
+- ✅ 不占用服务器带宽
+- ✅ 自动上传，无需手动操作
+- ✅ 上传失败不影响部署
+
+详细配置请查看 [DOCKER.md - CDN 配置指南](./DOCKER.md#cdn-配置指南)
 
 ### 常用命令
 
@@ -202,7 +222,7 @@ curl http://localhost:8080/api/health
 curl https://yourdomain.com/api/health
 ```
 
-详细部署文档请查看 [CLAUDE.md](./CLAUDE.md#docker-部署)
+详细部署文档请查看 [DOCKER.md](./DOCKER.md)
 
 ## 📝 环境变量
 
@@ -242,7 +262,7 @@ npm run type-check   # 类型检查
 
 ## 📚 文档
 
-- [部署指南](./DOCKER.md) - Docker 部署完整文档
+- [部署指南](./DOCKER.md) - Docker 部署完整文档（含 CDN 配置）
 - [开发指南](./CLAUDE.md) - 开发规范和快速参考
 - [完整规划文档](./PROJECT_PLAN.md) - 详细技术方案
 - [开发进度](./DEVELOPMENT.md) - 实时进度记录

@@ -1,14 +1,14 @@
 # Docker 部署指南
 
-项目提供三个 Docker 管理脚本，简化部署流程。
+项目提供三个 Docker 管理脚本，简化部署流程。支持自动上传静态文件到 CDN。
 
 ## 环境对比
 
 | 脚本 | 环境 | 端口 | 配置文件 | 特性 |
 |------|------|------|----------|------|
 | `docker-local.sh` | 本地开发 | 3000 | `.env.docker` | 快速启动，无SSL |
-| `docker-staging.sh` | 测试环境 | 8080/8443 | `.env.staging` | 支持SSL，自动备份 |
-| `docker-production.sh` | 正式环境 | 80/443 | `.env.production` | 支持SSL，自动备份，回滚 |
+| `docker-staging.sh` | 测试环境 | 8080/8443 | `.env.staging` | 支持SSL，自动备份，CDN上传 |
+| `docker-production.sh` | 正式环境 | 80/443 | `.env.production` | 支持SSL，自动备份，回滚，CDN上传 |
 
 ## 脚本命令
 
@@ -90,6 +90,31 @@ curl https://yourdomain.com/api/health
 | `NEXT_PUBLIC_API_URL` | API地址 | `https://api.example.com` |
 | `NEXT_PUBLIC_CDN_URL` | CDN地址 | `https://cdn.example.com` |
 | `NEXT_PUBLIC_ENV` | 环境标识 | `development/staging/production` |
+
+### CDN 配置（可选）
+
+部署时会自动通过 Docker 容器上传静态文件到 CDN（无需本地安装工具）。
+
+**基础配置**：
+
+```bash
+# .env.production
+NEXT_PUBLIC_CDN_URL=https://cdn.example.com  # CDN 域名
+CDN_PROVIDER=aliyun                          # aliyun 或 tencent
+
+# 阿里云 OSS
+OSS_BUCKET=oss://your-bucket
+OSS_ACCESS_KEY_ID=xxx
+OSS_ACCESS_KEY_SECRET=xxx
+
+# 或腾讯云 COS
+COS_BUCKET=your-bucket-1250000000
+COS_REGION=ap-guangzhou
+COS_SECRET_ID=xxx
+COS_SECRET_KEY=xxx
+```
+
+详细配置说明见 `.env.production.example` 文件。
 
 ### 可选变量
 
@@ -188,6 +213,102 @@ web-tem/
    - 正式环境必须使用 HTTPS
    - 定期更新 SSL 证书（Let's Encrypt 证书有效期90天）
    - 使用强密码和密钥
+
+## CDN 配置指南
+
+### 为什么使用 CDN？
+
+- ✅ 不占用服务器带宽
+- ✅ 全球访问加速
+- ✅ 降低成本
+
+### 配置步骤
+
+#### 1. 创建对象存储和 CDN
+
+**阿里云 OSS**：
+1. 创建 OSS Bucket（公共读）
+2. 开启 CDN 加速，绑定域名 `cdn.example.com`
+3. 配置 SSL 证书
+4. 获取 AccessKey ID 和 Secret
+
+**腾讯云 COS**：
+1. 创建 COS Bucket（公共读）
+2. 开启 CDN 加速，绑定域名 `cdn.example.com`
+3. 配置 SSL 证书
+4. 获取 Secret ID 和 Key
+
+#### 2. 配置环境变量
+
+编辑 `.env.production` 文件：
+
+```bash
+# CDN 基础配置
+NEXT_PUBLIC_CDN_URL=https://cdn.example.com
+CDN_PROVIDER=aliyun
+
+# 阿里云 OSS 凭证
+OSS_BUCKET=oss://your-bucket-name
+OSS_ACCESS_KEY_ID=your_access_key_id
+OSS_ACCESS_KEY_SECRET=your_access_key_secret
+OSS_ENDPOINT=oss-cn-hangzhou.aliyuncs.com
+
+# 或腾讯云 COS 凭证
+# CDN_PROVIDER=tencent
+# COS_BUCKET=your-bucket-1250000000
+# COS_REGION=ap-guangzhou
+# COS_SECRET_ID=your_secret_id
+# COS_SECRET_KEY=your_secret_key
+```
+
+#### 3. 部署
+
+```bash
+# 部署时会自动上传静态文件到 CDN
+./docker-production.sh up
+```
+
+**部署流程**：
+1. 构建 Next.js 项目
+2. 自动检测 CDN 配置
+3. 通过 Docker 容器上传静态文件（无需本地安装 ossutil/coscmd）
+4. 构建并启动 Docker 容器
+
+**注意**：
+- 未配置 CDN 时会自动跳过上传
+- 上传失败不会中断部署流程
+- 首次使用腾讯云 COS 需要构建 Docker 镜像：
+  ```bash
+  docker build -f docker/cos-upload.Dockerfile -t web-tem/coscmd:latest .
+  ```
+
+### 独立上传脚本
+
+也可以单独调用上传脚本：
+
+```bash
+# 查看帮助
+./scripts/upload-static.sh --help
+
+# 使用环境文件上传
+./scripts/upload-static.sh --env-file .env.production
+
+# Dry-run 模式（仅查看命令）
+./scripts/upload-static.sh --env-file .env.staging --dry-run
+```
+
+### 缓存管理
+
+Next.js 静态文件名包含哈希值（如 `webpack-b09e44ad183df33b.js`），文件内容变化时哈希值自动变化，**无需手动刷新 CDN 缓存**。
+
+### 故障排查
+
+| 问题 | 解决方案 |
+|------|----------|
+| 静态资源 404 | 检查 CDN 域名配置和 HTTPS 证书 |
+| 上传失败 | 查看日志，检查 AccessKey 权限 |
+| 跳过 CDN 上传 | 检查环境变量配置是否正确 |
+| Docker 镜像构建失败 | 确保网络可访问 Docker Hub 和 PyPI |
 
 ---
 

@@ -122,6 +122,21 @@ backup_image() {
     fi
 }
 
+# 上传静态文件到 CDN（通过独立脚本）
+upload_static_assets() {
+    if [ ! -f "scripts/upload-static.sh" ]; then
+        print_info "未找到 scripts/upload-static.sh，跳过 CDN 上传"
+        return 0
+    fi
+
+    print_info "调用 CDN 上传脚本..."
+    if ./scripts/upload-static.sh --env-file "$ENV_FILE"; then
+        print_success "CDN 上传完成"
+    else
+        print_warning "CDN 上传失败（可通过设置 CDN_SKIP_ON_ERROR=1 忽略错误）"
+    fi
+}
+
 # 启动服务
 docker_up() {
     print_header
@@ -145,6 +160,10 @@ docker_up() {
     fi
 
     print_success "构建成功"
+    echo ""
+
+    # 上传静态文件到 CDN（如果配置了）
+    upload_static_assets || true
     echo ""
 
     print_info "启动容器..."
