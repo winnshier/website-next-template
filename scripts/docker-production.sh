@@ -111,6 +111,10 @@ backup_image() {
             if [ $? -eq 0 ]; then
                 print_success "镜像已备份: web-tem:${BACKUP_TAG}"
                 echo "$BACKUP_TAG" > .last-backup-tag
+
+                # 清理旧备份（保留最近2个）
+                cleanup_old_backups
+
                 return 0
             else
                 print_warning "镜像备份失败，继续部署..."
@@ -123,6 +127,29 @@ backup_image() {
     else
         print_info "首次部署，无需备份"
         return 1
+    fi
+}
+
+# 清理旧备份（保留最近2个）
+cleanup_old_backups() {
+    local MAX_BACKUPS=2
+
+    # 获取所有备份镜像，按时间排序
+    local backups=$(docker images web-tem --format "{{.Tag}}" | grep "^backup-" | sort -r)
+    local backup_count=$(echo "$backups" | grep -c "^backup-" || echo "0")
+
+    if [ "$backup_count" -gt "$MAX_BACKUPS" ]; then
+        print_info "清理旧备份（保留最近${MAX_BACKUPS}个）..."
+
+        # 跳过最近的2个，删除其余的
+        echo "$backups" | tail -n +$((MAX_BACKUPS + 1)) | while read old_backup; do
+            if [ -n "$old_backup" ]; then
+                print_info "删除旧备份: web-tem:${old_backup}"
+                docker rmi "web-tem:${old_backup}" >/dev/null 2>&1 || true
+            fi
+        done
+
+        print_success "旧备份清理完成"
     fi
 }
 
