@@ -461,18 +461,36 @@ run_tencent_upload() {
 set -e
 
 # 配置 coscmd
-SCHEMA="${COSCMD_SCHEMA:-https}"
-ARGS="-a $COSCMD_SECRET_ID -s $COSCMD_SECRET_KEY -b $COSCMD_BUCKET -r $COSCMD_REGION --schema $SCHEMA"
+ARGS="-a $COSCMD_SECRET_ID -s $COSCMD_SECRET_KEY -b $COSCMD_BUCKET -r $COSCMD_REGION"
 
 if [ -n "$COSCMD_SESSION_TOKEN" ]; then
     ARGS="$ARGS -t $COSCMD_SESSION_TOKEN"
 fi
 
+# 如果指定使用 http，添加 --do-not-use-ssl 参数
+if [ "${COSCMD_SCHEMA:-https}" = "http" ]; then
+    ARGS="$ARGS --do-not-use-ssl"
+fi
+
 echo "[INFO] 配置 coscmd..."
-coscmd config $ARGS >/tmp/coscmd-config.log 2>&1
+if ! coscmd config $ARGS 2>&1; then
+    echo "[ERROR] coscmd 配置失败"
+    exit 1
+fi
 
 echo "[INFO] 开始上传..."
-coscmd upload -rs /upload "$COSCMD_TARGET" --delete
+echo "[INFO] 源目录: /upload/*"
+echo "[INFO] 目标路径: $COSCMD_TARGET"
+
+# 使用 /upload/* 上传目录内容，而不是目录本身
+# -r: 递归上传
+# -s: 同步上传（跳过已存在且未修改的文件）
+# --delete: 删除远程多余文件
+# --skipmd5: 跳过 MD5 校验以加快速度
+if ! coscmd upload -rs --skipmd5 /upload/ "$COSCMD_TARGET" 2>&1; then
+    echo "[ERROR] 上传失败"
+    exit 1
+fi
 
 echo "[SUCCESS] 上传完成"
 EOF

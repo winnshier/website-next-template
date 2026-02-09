@@ -4,8 +4,8 @@ LABEL maintainer="web-tem deploy" \
       description="Minimal coscmd runtime for Tencent COS CDN uploads"
 
 # 安装 coscmd（腾讯云对象存储命令行工具）
-# 固定版本以确保可重复构建
-RUN pip install --no-cache-dir coscmd==1.8.6
+# 使用最新稳定版本
+RUN pip install --no-cache-dir coscmd
 
 WORKDIR /workspace
 
