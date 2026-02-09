@@ -202,12 +202,12 @@ docker_up() {
     check_env_file
     check_ssl_certs
 
-    # 清理旧容器
-    cleanup_old_containers
-
-    # 备份当前镜像（忽略返回值）
+    # 先备份当前镜像（在删除容器之前）
     backup_image || true
     echo ""
+
+    # 然后清理旧容器
+    cleanup_old_containers
 
     print_info "构建Docker镜像..."
     docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build
@@ -388,6 +388,16 @@ docker_rollback() {
         print_success "健康检查通过！"
         echo ""
         print_success "已成功回滚到: ${BACKUP_TAG}"
+
+        # 清理悬空镜像
+        print_info "清理悬空镜像..."
+        local dangling_count=$(docker images -f "dangling=true" -q | wc -l | tr -d ' ')
+        if [ "$dangling_count" -gt 0 ]; then
+            docker image prune -f >/dev/null 2>&1
+            print_success "已清理 ${dangling_count} 个悬空镜像"
+        else
+            print_info "无悬空镜像需要清理"
+        fi
     else
         print_error "健康检查失败！"
         print_critical "请立即检查日志！"
