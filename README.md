@@ -263,6 +263,7 @@ npm run type-check   # 类型检查
 ## 📚 文档
 
 - [部署指南](./DOCKER.md) - Docker 部署完整文档（含 CDN 配置）
+- [响应式设计指南](./docs/RESPONSIVE_DESIGN.md) - 动态单位和响应式开发规范
 - [CDN 使用指南](./docs/CDN_USAGE.md) - 静态资源 CDN 配置和使用方法
 - [开发指南](./CLAUDE.md) - 开发规范和快速参考
 - [完整规划文档](./PROJECT_PLAN.md) - 详细技术方案
@@ -272,11 +273,12 @@ npm run type-check   # 类型检查
 
 - **框架**: Next.js 14 (App Router)
 - **语言**: TypeScript 5
-- **样式**: Tailwind CSS 3
+- **样式**: Tailwind CSS 3 + PostCSS
 - **动画**: Framer Motion 11
 - **国际化**: next-intl 3
 - **SEO**: next-sitemap 4
 - **部署**: Docker + Nginx
+- **响应式**: 动态 rem 单位 + postcss-pxtorem
 
 ## 📊 性能
 
@@ -298,10 +300,12 @@ npm run type-check   # 类型检查
 - 多语言hreflang标签
 - 动态Open Graph图片
 
-### 3. 响应式设计
-- PC端和移动端不同的导航栏
-- PC端和移动端不同的页脚
-- 自适应布局和字体大小
+### 3. 响应式设计（动态单位）
+- **设计基准**：PC端 1920px，移动端 375px
+- **动态缩放**：根据屏幕尺寸自动调整
+- **PostCSS 转换**：CSS 中的 px 自动转为 rem
+- **断点标准**：768px（行业标准）
+- **最大宽度**：1920px 锁定，避免过度放大
 
 ### 4. API降级
 - API请求失败自动使用静态JSON

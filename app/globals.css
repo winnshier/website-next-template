@@ -3,8 +3,34 @@
 @tailwind utilities;
 
 :root {
+  /* 颜色变量 */
   --background: #ffffff;
   --foreground: #171717;
+
+  /* 移动端基准：375px */
+  --viewport-base: 375;
+  --base-unit: calc(100vw / var(--viewport-base));
+
+  /* 字体基准：移动端 14px */
+  --font-base: 14;
+}
+
+@media (min-width: 768px) {
+  :root {
+    /* PC端基准：1920px */
+    --viewport-base: 1920;
+    --base-unit: calc(100vw / var(--viewport-base));
+
+    /* 字体基准：PC端 16px */
+    --font-base: 16;
+  }
+}
+
+@media (min-width: 1920px) {
+  :root {
+    /* 锁定最大尺寸，避免超大屏幕过度放大 */
+    --base-unit: 1px;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -14,10 +40,19 @@
   }
 }
 
+html {
+  /* 动态根字体大小 */
+  font-size: calc(var(--font-base) * var(--base-unit));
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
   font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+
+  /* 限制最大宽度，居中显示 */
+  max-width: 1920px;
+  margin: 0 auto;
 }
 
 @layer utilities {
@@ -25,3 +60,4 @@ body {
     text-wrap: balance;
   }
 }
+

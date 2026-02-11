@@ -249,6 +249,112 @@ NEXT_PUBLIC_ENV=production  # development/staging/production
 - **浏览器支持**：Chrome/Safari/Firefox/Edge 100+
 - **安全要点**：敏感信息使用环境变量，正式环境必须启用HTTPS
 
+## 响应式设计
+
+### 设计基准
+
+- **PC端**：1920px × 1080px，根字体 16px
+- **移动端**：375px 一倍图，根字体 14px
+- **断点**：768px（行业标准）
+
+### 动态单位
+
+项目使用动态 `rem` 单位，根据屏幕尺寸自动缩放：
+
+```css
+/* 移动端 (<768px) */
+1rem = 14px (基于 375px)
+
+/* PC端 (≥768px) */
+1rem = 16px (基于 1920px)
+
+/* 超大屏 (≥1920px) */
+1rem = 16px (锁定，不再放大)
+```
+
+### PostCSS 自动转换
+
+CSS 文件中的 `px` 会自动转换为 `rem`：
+
+```css
+/* 你写的代码 */
+.my-class {
+  font-size: 20px;
+  padding: 16px;
+}
+
+/* 编译后 */
+.my-class {
+  font-size: 1.25rem;  /* 自动缩放 */
+  padding: 1rem;       /* 自动缩放 */
+}
+```
+
+### 响应式断点
+
+```tsx
+// 标准断点
+mobile    max: 767px   // 移动端专属
+md        768px        // 平板及以上（主要断点）
+lg        1024px       // 桌面
+xl        1280px       // 大屏
+
+// 语义化断点
+tablet    768px        // 平板及以上
+desktop   1024px       // 桌面及以上
+wide      1920px       // 宽屏（锁定）
+```
+
+### 使用示例
+
+```tsx
+// 响应式字体
+<h1 className="text-2xl md:text-4xl lg:text-5xl">
+  标题
+</h1>
+
+// 响应式布局
+<div className="
+  px-4 md:px-8 lg:px-16
+  grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3
+  gap-4 md:gap-6 lg:gap-8
+">
+  内容
+</div>
+
+// 移动端专属
+<div className="mobile:block md:hidden">
+  仅移动端显示
+</div>
+
+// CSS 文件直接写 px（自动转换）
+.custom-style {
+  font-size: 18px;    /* 自动转为 1.125rem */
+  padding: 20px 30px; /* 自动转为 1.25rem 1.875rem */
+}
+```
+
+### 最佳实践
+
+1. **移动端优先**：从小屏开始，逐步增强
+   ```tsx
+   ✅ <div className="text-base md:text-lg lg:text-xl">
+   ❌ <div className="text-xl lg:text-base">
+   ```
+
+2. **使用 rem 单位**：字体、间距使用 rem（会自动缩放）
+   ```tsx
+   ✅ <div className="text-lg p-4">
+   ❌ <div className="text-[20px] p-[16px]">
+   ```
+
+3. **容器最大宽度**：限制超大屏幕
+   ```tsx
+   <div className="w-full max-w-7xl mx-auto">
+   ```
+
+详细文档：[响应式设计指南](./docs/RESPONSIVE_DESIGN.md)
+
 ## CDN 静态资源使用
 
 ### 基本用法
